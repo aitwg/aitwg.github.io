@@ -1,79 +1,300 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>老爸的異想世界</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f5;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: #333;
-        }
+    
+    <!-- 引入 React 和 ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- 引入 Babel 用來解析 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 引入 Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-        .container {
-            text-align: center;
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            max-width: 90%;
-            width: 400px;
-        }
-
-        .container h1 {
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #4a90e2;
-        }
-
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            background-color: #4a90e2;
-            color: #fff;
-            text-decoration: none;
-            font-size: 18px;
-            border-radius: 10px;
-            transition: background-color 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #357abd;
-        }
-
-        @media (max-width: 400px) {
-            .container {
-                width: 100%;
-                padding: 15px;
+    <!-- 自定義 Tailwind 設定 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Microsoft JhengHei', 'Arial', 'sans-serif'],
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
             }
         }
+    </script>
+    
+    <style>
+        /* 隱藏未載入完成的內容，避免閃爍 */
+        body { opacity: 0; transition: opacity 0.5s; }
+        body.loaded { opacity: 1; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>老爸的異想世界</h1>
-        <a href="https://hub.aitwg.com/packing-list/" class="btn">旅行清單</a>
-        <a href="https://hub.aitwg.com/courses/" class="btn">PythonAI</a>
-        <a href="https://hub.aitwg.com/gstock/" class="btn">台美股市觀測</a>
-        <a href="https://hub.aitwg.com/tetris/" class="btn">俄羅斯方塊(AI)</a>
-        <a href="https://hub.aitwg.com/barcode/" class="btn">條碼產生器</a>
-        <a href="https://hub.aitwg.com/qrcodeapi/" class="btn">二維碼生成器</a>
-        <a href="https://hub.aitwg.com/amyeat01/" class="btn">Amy 吃什麼</a>
-        <a href="https://hub.aitwg.com/2048-game/" class="btn">2048</a>
-         <a href="https://hub.aitwg.com/gomoku0104/" class="btn">五子棋</a>
-        <a href="https://hub.aitwg.com/dinorun/" class="btn">恐龍跑酷</a>
-        <a href="https://hub.aitwg.com/sudoku/" class="btn">數獨</a>
-        <a href="https://hub.aitwg.com/slotgame/" class="btn">吃角子老虎機</a>
-        <a href="https://hub.aitwg.com/othello/" class="btn">黑白棋</a>
-    </div>
+<body class="bg-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const LandingPage = () => {
+            const [filter, setFilter] = useState('All');
+            const [searchTerm, setSearchTerm] = useState('');
+            const [isScrolled, setIsScrolled] = useState(false);
+            const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+            // Data structure adapted for HTML version (using icon names strings)
+            const apps = [
+                { id: 1, title: "旅行清單", url: "https://hub.aitwg.com/packing-list/", icon: "luggage", category: "生活", color: "from-blue-400 to-blue-600", desc: "不再遺漏任何行李，輕鬆出發" },
+                { id: 2, title: "PythonAI", url: "https://hub.aitwg.com/courses/", icon: "brain-circuit", category: "學習", color: "from-purple-400 to-purple-600", desc: "探索人工智能與程式設計" },
+                { id: 3, title: "台美股市觀測", url: "https://hub.aitwg.com/gstock/", icon: "trending-up", category: "財經", color: "from-green-400 to-green-600", desc: "即時掌握市場脈動" },
+                { id: 4, title: "俄羅斯方塊(AI)", url: "https://hub.aitwg.com/tetris/", icon: "gamepad-2", category: "遊戲", color: "from-indigo-400 to-indigo-600", desc: "經典遊戲結合 AI 挑戰" },
+                { id: 5, title: "條碼產生器", url: "https://hub.aitwg.com/barcode/", icon: "scan-line", category: "工具", color: "from-gray-500 to-gray-700", desc: "快速生成各類商品條碼" },
+                { id: 6, title: "二維碼生成器", url: "https://hub.aitwg.com/qrcodeapi/", icon: "qr-code", category: "工具", color: "from-slate-500 to-slate-700", desc: "網址、文字轉 QR Code" },
+                { id: 7, title: "Amy 吃什麼", url: "https://hub.aitwg.com/amyeat01/", icon: "utensils", category: "生活", color: "from-pink-400 to-pink-600", desc: "解決選擇困難症的好幫手" },
+                { id: 8, title: "2048", url: "https://hub.aitwg.com/2048-game/", icon: "grid-3x3", category: "遊戲", color: "from-yellow-400 to-yellow-600", desc: "數字合成益智挑戰" },
+                { id: 9, title: "五子棋", url: "https://hub.aitwg.com/gomoku0104/", icon: "circle-dot", category: "遊戲", color: "from-teal-400 to-teal-600", desc: "經典策略對弈" },
+                { id: 10, title: "恐龍跑酷", url: "https://hub.aitwg.com/dinorun/", icon: "rabbit", category: "遊戲", color: "from-orange-400 to-orange-600", desc: "簡單好玩的無盡跑酷" },
+                { id: 11, title: "數獨", url: "https://hub.aitwg.com/sudoku/", icon: "grid-2x2", category: "遊戲", color: "from-cyan-400 to-cyan-600", desc: "鍛鍊邏輯思維" },
+                { id: 12, title: "吃角子老虎機", url: "https://hub.aitwg.com/slotgame/", icon: "coins", category: "遊戲", color: "from-red-400 to-red-600", desc: "試試你的好運氣" },
+                { id: 13, title: "黑白棋", url: "https://hub.aitwg.com/othello/", icon: "circle", category: "遊戲", color: "from-stone-600 to-stone-800", desc: "翻轉局勢的智慧之戰" },
+            ];
+
+            const categories = ['All', '生活', '遊戲', '工具', '財經', '學習'];
+
+            // Initialize Lucide icons
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }); // Run on every render to ensure icons are created
+
+            useEffect(() => {
+                const handleScroll = () => {
+                    setIsScrolled(window.scrollY > 20);
+                };
+                window.addEventListener('scroll', handleScroll);
+                document.body.classList.add('loaded'); // Show body after mount
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const filteredApps = apps.filter(app => {
+                const matchesFilter = filter === 'All' || app.category === filter;
+                const matchesSearch = app.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                      app.desc.toLowerCase().includes(searchTerm.toLowerCase());
+                return matchesFilter && matchesSearch;
+            });
+
+            return (
+                <div className="min-h-screen text-slate-800 font-sans selection:bg-blue-200">
+                
+                {/* Navigation Bar */}
+                <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'}`}>
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-2">
+                        <div className="bg-gradient-to-tr from-blue-500 to-purple-600 text-white p-2 rounded-xl shadow-lg">
+                             <i data-lucide="sparkles" width="24" height="24"></i>
+                        </div>
+                        <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+                            老爸的異想世界
+                        </span>
+                        </div>
+                        
+                        {/* Desktop Menu */}
+                        <div className="hidden md:flex items-center space-x-8">
+                        <a href="#" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">首頁</a>
+                        <a href="#apps" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">應用程式</a>
+                        <a href="#" className="text-slate-600 hover:text-blue-600 font-medium transition-colors">關於</a>
+                        <button className="bg-slate-900 text-white px-5 py-2 rounded-full hover:bg-slate-700 transition-colors shadow-lg shadow-slate-900/20">
+                            聯絡我
+                        </button>
+                        </div>
+
+                        {/* Mobile Menu Button */}
+                        <div className="md:hidden">
+                        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-slate-600 p-2">
+                            {mobileMenuOpen ? <i data-lucide="x"></i> : <i data-lucide="menu"></i>}
+                        </button>
+                        </div>
+                    </div>
+                    </div>
+
+                    {/* Mobile Menu Dropdown */}
+                    {mobileMenuOpen && (
+                    <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-slate-100 p-4 shadow-lg animate-fade-in">
+                        <div className="flex flex-col space-y-4">
+                        <a href="#" className="text-slate-600 font-medium">首頁</a>
+                        <a href="#apps" className="text-slate-600 font-medium">應用程式</a>
+                        <a href="#" className="text-slate-600 font-medium">關於</a>
+                        </div>
+                    </div>
+                    )}
+                </nav>
+
+                {/* Hero Section */}
+                <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+                    {/* Abstract Background Shapes */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 opacity-30 pointer-events-none">
+                    <div className="absolute top-20 left-10 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+                    <div className="absolute top-20 right-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+                    <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+                    </div>
+
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+                    <div className="inline-flex items-center space-x-2 bg-white/60 backdrop-blur-sm border border-white/50 rounded-full px-4 py-1 mb-8 shadow-sm">
+                        <span className="flex h-2 w-2 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        <span className="text-sm font-medium text-slate-600">所有服務正常運作中</span>
+                    </div>
+                    
+                    <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight mb-6">
+                        探索生活與科技的
+                        <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                        無限可能
+                        </span>
+                    </h1>
+                    
+                    <p className="max-w-2xl mx-auto text-xl text-slate-600 mb-10 leading-relaxed">
+                        歡迎來到老爸的異想世界。這裡匯集了實用的生活工具、有趣的 AI 實驗以及經典的小遊戲。輕鬆點擊，立即體驗。
+                    </p>
+
+                    <div className="max-w-md mx-auto relative group">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="search" className="h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
+                        </div>
+                        <input
+                        type="text"
+                        className="block w-full pl-11 pr-4 py-4 bg-white border border-slate-200 rounded-2xl leading-5 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xl shadow-blue-900/5 transition-all"
+                        placeholder="搜尋工具或遊戲... (例如: 股市, 2048)"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    </div>
+                </div>
+
+                {/* Main Content Area */}
+                <div id="apps" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+                    
+                    {/* Filter Tabs */}
+                    <div className="flex flex-wrap justify-center gap-2 mb-12">
+                    {categories.map((cat) => (
+                        <button
+                        key={cat}
+                        onClick={() => setFilter(cat)}
+                        className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                            filter === cat
+                            ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20 scale-105'
+                            : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                        }`}
+                        >
+                        {cat === 'All' ? '全部顯示' : cat}
+                        </button>
+                    ))}
+                    </div>
+
+                    {/* Grid Layout */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {filteredApps.map((app) => (
+                        <a
+                        key={app.id}
+                        href={app.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group relative bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+                        >
+                        {/* Background Decoration on Hover */}
+                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity duration-300 bg-gradient-to-br ${app.color}`}></div>
+
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div className="flex justify-between items-start mb-4">
+                            <div className={`p-3 rounded-2xl bg-gradient-to-br ${app.color} text-white shadow-lg shadow-blue-900/10`}>
+                                <i data-lucide={app.icon} width="24" height="24"></i>
+                            </div>
+                            <div className="bg-slate-50 text-slate-500 text-xs px-2 py-1 rounded-md font-medium group-hover:bg-white transition-colors">
+                                {app.category}
+                            </div>
+                            </div>
+
+                            <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">
+                            {app.title}
+                            </h3>
+                            
+                            <p className="text-slate-500 text-sm mb-6 flex-grow leading-relaxed">
+                            {app.desc}
+                            </p>
+
+                            <div className="flex items-center text-sm font-medium text-slate-400 group-hover:text-blue-600 transition-colors">
+                            開始使用 <i data-lucide="external-link" width="14" className="ml-1"></i>
+                            </div>
+                        </div>
+                        </a>
+                    ))}
+                    </div>
+
+                    {/* Empty State */}
+                    {filteredApps.length === 0 && (
+                    <div className="text-center py-20">
+                        <div className="bg-slate-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="search" width="32" className="text-slate-400"></i>
+                        </div>
+                        <h3 className="text-lg font-medium text-slate-900">找不到相關結果</h3>
+                        <p className="text-slate-500">試著搜尋其他關鍵字或切換分類看看。</p>
+                        <button 
+                        onClick={() => {setSearchTerm(''); setFilter('All');}}
+                        className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                        清除所有篩選
+                        </button>
+                    </div>
+                    )}
+                </div>
+
+                {/* Footer */}
+                <footer className="bg-white border-t border-slate-100 py-12">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-col md:flex-row justify-between items-center">
+                        <div className="mb-4 md:mb-0">
+                        <span className="text-lg font-bold text-slate-800">老爸的異想世界</span>
+                        <p className="text-slate-500 text-sm mt-1">© {new Date().getFullYear()} All Rights Reserved.</p>
+                        </div>
+                        <div className="flex space-x-6">
+                        <a href="#" className="text-slate-400 hover:text-slate-600 transition-colors">隱私權政策</a>
+                        <a href="#" className="text-slate-400 hover:text-slate-600 transition-colors">使用條款</a>
+                        <div className="flex items-center space-x-4 ml-4 pl-4 border-l border-slate-200">
+                             <i data-lucide="coffee" width="20" className="text-slate-400 hover:text-amber-600 cursor-pointer transition-colors"></i>
+                             <i data-lucide="zap" width="20" className="text-slate-400 hover:text-yellow-500 cursor-pointer transition-colors"></i>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+                </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<LandingPage />);
+    </script>
 </body>
 </html>
